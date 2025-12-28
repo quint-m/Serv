@@ -1,0 +1,66 @@
+graph TD
+    %% --- SERVER SIDE ---
+    subgraph Server_Side ["Server World (Authoritative Time)"]
+        ServerClock["Server Clock"]
+        ServerGameLoop["Server Game Loop"]
+        ServerSocket["Server Socket"]
+    end
+
+    %% --- CLIENT SIDE ---
+    subgraph Client_Side [Client World]
+        
+        %% 1. CLOCK SYNC
+        subgraph Time_Sync ["1. Clock Synchronization (Every 2s)"]
+            direction TB
+            EmitPing[Emit 'clock:ping'<br/>Record t0] -->|Network| ServerClock
+            ServerClock -->|Return ServerTime| RecPong[Receive Pong<br/>Record t1]
+            
+            RecPong --> CalcRTT["RTT = t1 - t0<br/>Latency ≈ RTT / 2"]
+            CalcRTT --> CalcOffset["Estimate = ServerTime - (t0 + Latency)"]
+            CalcOffset --> EMA["Apply Smoothing (EMA)<br/>offset = prev*0.9 + new*0.1"]
+            EMA --> GlobalOffset[("serverTimeOffsetMs")]
+            
+            style GlobalOffset fill:#f96,stroke:#333,stroke-width:4px
+        end
+
+        %% 2. INPUT LOOP
+        subgraph Input_Loop ["2. Input & Prediction (60Hz)"]
+            Keys["Keyboard State"] --> CheckKeys{Input?}
+            CheckKeys -- Yes --> CreateMsg["Create Msg<br/>(Seq++, Amount)"]
+            CreateMsg -->|"1. Store"| Pending[("Pending Inputs")]
+            CreateMsg -->|"2. Send"| ServerSocket
+            CreateMsg -->|"3. Predict"| Predict["Apply Local Prediction<br/>(Modify Latest Snapshot)"]
+            Predict -.-> Snapshots
+        end
+
+        %% 3. NETWORK HANDLER
+        subgraph Net_Handler [3. State Reconciliation]
+            ServerSocket -->|'gameStateUpdate'| OnUpdate[Receive State]
+            OnUpdate -->|ServerTime| PushSnap[Push to History]
+            PushSnap --> Snapshots[("Snapshot Buffer<br/>(History)")]
+            
+            OnUpdate -->|Ack Seq #| Prune[Remove Ack'd Inputs]
+            Prune --x Pending
+            Prune -->|Remaining Inputs| Reconcile[Reconciliation:<br/>Take Server State + Re-apply Pending]
+            Reconcile -.->|Corrected State| Snapshots
+        end
+
+        %% 4. RENDER LOOP
+        subgraph Render_Loop ["4. Interpolated Rendering (RAF)"]
+            RAF[RequestAnimationFrame] --> CalcRenderTime
+            
+            GlobalOffset -.->|1. Sync Time| CalcRenderTime
+            CalcRenderTime["RenderTime = (Now + Offset) - Buffer"]
+            
+            CalcRenderTime --> FindSnaps[Find Snapshots A & B<br/>surrounding RenderTime]
+            Snapshots -.->|2. Read History| FindSnaps
+            
+            FindSnaps --> Lerp["Interpolate (Lerp)"]
+            Lerp --> Draw[Draw to Canvas]
+        end
+    end
+
+    %% Styling
+    style Server_Side fill:#333,stroke:#fff,color:#fff
+    style Snapshots fill:#f9f,stroke:#333,stroke-width:2px
+    style Pending fill:#f9f,stroke:#333,stroke-width:2px

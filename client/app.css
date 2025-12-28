@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+    themes: light --default, dark --prefersdark, black;
+}
+
+.login-container h1 {
+    font-family: 'Jersey 10', sans-serif;
+    font-size: 3rem;
+}
+
+.game-container {
+}

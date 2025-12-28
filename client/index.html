@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="black">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script type="module" src="./index.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link rel="stylesheet" href="app.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap"
+      rel="stylesheet"
+    />
+    <title>WebsocketPong-Client</title>
+  </head>
+  <body>
+    <main class="flex min-h-screen items-center justify-center">
+      <div class="login-container flex flex-col gap-4 items-center">
+        <h1>WebsocketPong-Client</h1>
+        <label class="input">
+          <input type="text" id="username" placeholder="Username" />
+        </label>
+        <label class="input">
+          <input type="text" id="room" placeholder="Room name" />
+        </label>
+        <button class="btn" id="joinBtn">Join Game</button>
+      </div>
+      <div class="game-container" style="display: none" class="flex-row">
+        <ul class="connected-clients list bg-base-100 rounded-box shadow-md">Connected players</ul>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+      </div>
+    </main>
+  </body>
+</html>
